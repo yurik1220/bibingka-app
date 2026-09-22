@@ -25,7 +25,7 @@ router.get('/', async (req, res) => {
 router.patch('/', async (req, res) => {
   const {
     business_name, google_form_url, pickup_times,
-    payment_methods_enabled, notifications_enabled,
+    payment_methods_enabled, notifications_enabled, push_token,
   } = req.body;
 
   const existing = await pool.query('SELECT id FROM settings LIMIT 1');
@@ -39,14 +39,15 @@ router.patch('/', async (req, res) => {
        google_form_url = COALESCE($2, google_form_url),
        pickup_times = COALESCE($3, pickup_times),
        payment_methods_enabled = COALESCE($4, payment_methods_enabled),
-       notifications_enabled = COALESCE($5, notifications_enabled)
-     WHERE id = $6
+       notifications_enabled = COALESCE($5, notifications_enabled),
+       push_token = COALESCE($6, push_token)
+     WHERE id = $7
      RETURNING *`,
     [
       business_name, google_form_url,
       pickup_times ? JSON.stringify(pickup_times) : null,
       payment_methods_enabled ? JSON.stringify(payment_methods_enabled) : null,
-      notifications_enabled, existing.rows[0].id,
+      notifications_enabled, push_token, existing.rows[0].id,
     ]
   );
   res.json(rows[0]);

@@ -5,6 +5,7 @@ const {
   buildOrderItems,
   syncProductionForDate,
 } = require('../controllers/ordersController');
+const { sendPushNotification } = require('../utils/pushNotifications');
 
 const router = express.Router();
 
@@ -151,6 +152,13 @@ router.post('/import', requireFormImportSecret, async (req, res) => {
         ]
       );
       await client.query('COMMIT');
+
+      await sendPushNotification(
+        'Order needs review',
+        `${customer_name}'s order couldn't be matched to a product — check it manually.`,
+        { orderId: inserted.rows[0].id }
+      );
+
       return res.status(201).json({ ...inserted.rows[0], warning: err.message });
     }
 
@@ -189,6 +197,13 @@ router.post('/import', requireFormImportSecret, async (req, res) => {
     await syncProductionForDate(client, pickup_date);
 
     await client.query('COMMIT');
+
+    await sendPushNotification(
+      'New order received!',
+      `${customer_name} ordered ${orderItems.reduce((sum, i) => sum + i.quantity, 0)} bibingka - PHP ${total}`,
+      { orderId: order.id }
+    );
+
     res.status(201).json(order);
   } catch (err) {
     await client.query('ROLLBACK');
