@@ -9,6 +9,7 @@ const paymentsRoutes = require('./routes/payments');
 const productionRoutes = require('./routes/production');
 const reportsRoutes = require('./routes/reports');
 const settingsRoutes = require('./routes/settings');
+const publicRoutes = require('./routes/public');
 
 const app = express();
 
@@ -24,6 +25,7 @@ app.use('/api/payments', paymentsRoutes);
 app.use('/api/production', productionRoutes);
 app.use('/api/reports', reportsRoutes);
 app.use('/api/settings', settingsRoutes);
+app.use('/api/public', publicRoutes);
 
 // Catch anything unhandled
 app.use((req, res) => res.status(404).json({ error: 'Not found' }));

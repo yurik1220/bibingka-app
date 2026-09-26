@@ -15,7 +15,7 @@ router.get('/:date', async (req, res) => {
   );
 
   if (prodRes.rows.length === 0) {
-    return res.json({ date, daily_capacity: null, items: [] });
+    return res.json({ date, daily_capacity: null, is_closed: false, items: [] });
   }
 
   const production = prodRes.rows[0];
@@ -31,17 +31,19 @@ router.get('/:date', async (req, res) => {
   res.json({ ...production, items: itemsRes.rows });
 });
 
-// PATCH /api/production/:date/capacity  { daily_capacity: 100 }
+// PATCH /api/production/:date/capacity  { daily_capacity: 100, is_closed: false }
 router.patch('/:date/capacity', async (req, res) => {
   const { date } = req.params;
-  const { daily_capacity } = req.body;
+  const { daily_capacity, is_closed } = req.body;
 
   const { rows } = await pool.query(
-    `INSERT INTO production (date, daily_capacity)
-     VALUES ($1, $2)
-     ON CONFLICT (date) DO UPDATE SET daily_capacity = $2
+    `INSERT INTO production (date, daily_capacity, is_closed)
+     VALUES ($1, $2, COALESCE($3, false))
+     ON CONFLICT (date) DO UPDATE SET
+       daily_capacity = COALESCE($2, production.daily_capacity),
+       is_closed = COALESCE($3, production.is_closed)
      RETURNING *`,
-    [date, daily_capacity]
+    [date, daily_capacity, is_closed]
   );
   res.json(rows[0]);
 });
