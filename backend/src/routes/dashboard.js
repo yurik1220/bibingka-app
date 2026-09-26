@@ -19,10 +19,14 @@ router.get('/', async (req, res) => {
     [date]
   );
 
+  // order_items.quantity is a bundle count, not a piece count — multiply
+  // by products.pieces_per_bundle to get the real number of bibingka
+  // pieces Ate needs to prepare.
   const bibingkaToPrepare = await pool.query(
-    `SELECT COALESCE(SUM(oi.quantity), 0) AS total
+    `SELECT COALESCE(SUM(oi.quantity * COALESCE(p.pieces_per_bundle, 1)), 0) AS total
      FROM order_items oi
      JOIN orders o ON o.id = oi.order_id
+     JOIN products p ON p.id = oi.product_id
      WHERE o.pickup_date = $1 AND o.status != 'cancelled'`,
     [date]
   );

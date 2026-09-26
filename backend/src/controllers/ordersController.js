@@ -35,6 +35,12 @@ async function buildOrderItems(client, items) {
 
 // After an order is created/updated, roll its items into that day's
 // production totals so the Production screen stays in sync automatically.
+//
+// IMPORTANT: order_items.quantity is a count of BUNDLES (e.g. "2" means
+// 2 orders of a "4pcs" product), not actual pieces. production_items must
+// store actual PIECE counts, since that's what Ate needs to know how much
+// to bake. So this multiplies by products.pieces_per_bundle when rolling
+// up — never store raw bundle quantity here.
 async function syncProductionForDate(client, pickupDate) {
   if (!pickupDate) return;
 
@@ -54,12 +60,15 @@ async function syncProductionForDate(client, pickupDate) {
     productionId = prodRows[0].id;
   }
 
-  // Recompute ordered_qty per product for this date from scratch —
-  // simplest way to stay correct even after cancellations/edits.
+  // Recompute ordered_qty (in PIECES, not bundles) per product for this
+  // date from scratch — simplest way to stay correct even after
+  // cancellations/edits. COALESCE pieces_per_bundle to 1 as a safety net
+  // in case any product is missing a value.
   const { rows: totals } = await client.query(
-    `SELECT oi.product_id, SUM(oi.quantity) AS qty
+    `SELECT oi.product_id, SUM(oi.quantity * COALESCE(p.pieces_per_bundle, 1)) AS qty
      FROM order_items oi
      JOIN orders o ON o.id = oi.order_id
+     JOIN products p ON p.id = oi.product_id
      WHERE o.pickup_date = $1 AND o.status != 'cancelled'
      GROUP BY oi.product_id`,
     [pickupDate]
