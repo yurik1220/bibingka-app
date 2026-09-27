@@ -48,14 +48,21 @@ export default function ProductCard({ group, cart, onChangeQty }) {
           display: flex;
           flex-direction: column;
           gap: 10px;
+          min-width: 0;
         }
         .row {
           display: flex;
           align-items: center;
           justify-content: space-between;
+          flex-wrap: wrap;
+          row-gap: 8px;
+          min-width: 0;
         }
         .info {
           font-size: 14px;
+          flex: 1 1 auto;
+          min-width: 0;
+          overflow-wrap: anywhere;
         }
         .price {
           color: var(--ink-soft);
@@ -66,6 +73,8 @@ export default function ProductCard({ group, cart, onChangeQty }) {
           display: flex;
           align-items: center;
           gap: 12px;
+          flex-shrink: 0;
+          margin-left: auto;
         }
         .stepper button {
           width: 32px;
@@ -76,6 +85,16 @@ export default function ProductCard({ group, cart, onChangeQty }) {
           color: var(--pine);
           font-size: 17px;
           line-height: 1;
+        }
+        @media (max-width: 400px) {
+          .stepper {
+            gap: 8px;
+          }
+          .stepper button {
+            width: 28px;
+            height: 28px;
+            font-size: 15px;
+          }
         }
         .stepper button:active {
           background: var(--pine);

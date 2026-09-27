@@ -18,6 +18,12 @@ html,
 body {
   padding: 0;
   margin: 0;
+  width: 100%;
+  /* Safety net: nothing on this page should ever force horizontal
+     scrolling of the whole document. Components that intentionally
+     scroll sideways (like the step indicator's tab strip) manage their
+     own overflow-x internally, so this doesn't fight with those. */
+  overflow-x: hidden;
   background: var(--cream);
   color: var(--ink);
 }
@@ -47,4 +53,18 @@ textarea {
 
 a {
   color: inherit;
+}
+.info {
+  font-size: 14px;
+  flex: 1 1 auto;
+  min-width: 0;
+  overflow-wrap: anywhere;   /* NEW — force-break long label/price text */
+}
+.stepper {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  flex-shrink: 0;
+  margin-left: auto;
+  min-width: max-content;    /* NEW — guarantees it never gets compressed */
 }

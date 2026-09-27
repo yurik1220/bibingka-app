@@ -220,20 +220,11 @@ export default function OrderFlow() {
                 Back
               </button>
             )}
-            {step < 4 && (
-              <button
-                type="button"
-                className="primary"
-                disabled={
-                  (step === 0 && !canContinueFromMenu) ||
-                  (step === 1 && !canContinueFromPickup) ||
-                  (step === 2 && !canContinueFromDetails)
-                }
-                onClick={() => setStep(step + 1)}
-              >
-                Continue
-              </button>
-            )}
+            {/* Steps 0-3 get their "Continue" action from CartPanel below
+                (sidebar on desktop, sticky bar on mobile) — rendering a
+                second Continue button here would just duplicate it. Only
+                Review (step 4) needs its own button, since CartPanel isn't
+                shown there. */}
             {step === 4 && (
               <button type="button" className="primary" disabled={submitting} onClick={handleSubmit}>
                 {submitting ? 'Placing order...' : 'Place order'}
@@ -266,9 +257,14 @@ export default function OrderFlow() {
           display: grid;
           grid-template-columns: 1fr;
           gap: 20px;
+          min-width: 0;
+        }
+        .main {
+          min-width: 0;
         }
         .step-indicator-wrap {
           margin-bottom: 4px;
+          min-width: 0;
         }
         .nav-buttons {
           display: flex;
@@ -351,39 +347,37 @@ function PickupStep({
         />
       </div>
 
-      {pickupDate && availabilityLoading && <p className="muted">Checking availability...</p>}
-      {pickupDate && availabilityError && <p className="error">Couldn't check availability: {availabilityError}</p>}
-
-      {pickupDate && availability && !availabilityLoading && (
-        <div className={`status ${availability.status}`}>
-          {availability.status === 'closed' && "This date isn't open for pickup yet. Please choose another date."}
-          {availability.status === 'sold_out' && 'Sorry, this date is sold out. Please choose another date.'}
-          {availability.status === 'limited' && `Only ${availability.remaining} piece${availability.remaining === 1 ? '' : 's'} left for this date.`}
-          {availability.status === 'available' && `${availability.remaining} pieces available for this date.`}
+      {pickupDate && (
+        <div className="field">
+          <label>Pickup time</label>
+          <div className="slots">
+            {TIME_SLOTS.map((slot) => (
+              <button
+                key={slot}
+                type="button"
+                className={`slot ${pickupTime === slot ? 'active' : ''}`}
+                onClick={() => setPickupTime(slot)}
+              >
+                {slot}
+              </button>
+            ))}
+          </div>
         </div>
       )}
 
-      {exceedsCapacity && (
-        <div className="banner">
-          Your order needs {totalPieces} pieces, but only {availability.remaining} are left on this date. Reduce your order or choose another date.
+      {availabilityLoading && <p className="muted">Checking availability...</p>}
+      {availabilityError && <p className="error">Couldn't check availability: {availabilityError}</p>}
+
+      {availability && !availabilityLoading && (
+        <div className={`availability ${exceedsCapacity || availability.status === 'closed' || availability.status === 'sold_out' ? 'warn' : ''}`}>
+          {availability.status === 'closed' && "This date isn't open for pickup."}
+          {availability.status === 'sold_out' && 'This date is fully booked.'}
+          {availability.status !== 'closed' && availability.status !== 'sold_out' && exceedsCapacity &&
+            `Only ${availability.remaining} pieces left for this date — reduce your order or pick another date.`}
+          {availability.status !== 'closed' && availability.status !== 'sold_out' && !exceedsCapacity &&
+            `${availability.remaining} pieces still available on this date.`}
         </div>
       )}
-
-      <div className="field">
-        <label>Pickup time</label>
-        <div className="slots">
-          {TIME_SLOTS.map((slot) => (
-            <button
-              key={slot}
-              type="button"
-              className={pickupTime === slot ? 'slot selected' : 'slot'}
-              onClick={() => setPickupTime(slot)}
-            >
-              {slot}
-            </button>
-          ))}
-        </div>
-      </div>
 
       <style jsx>{`
         .card {
@@ -407,39 +401,19 @@ function PickupStep({
         .field {
           margin-bottom: 16px;
         }
-        label {
+        .field label {
           display: block;
           font-size: 13px;
           font-weight: 600;
-          margin-bottom: 6px;
+          margin-bottom: 8px;
         }
         input[type='date'] {
+          padding: 11px 14px;
+          border-radius: 10px;
+          border: 1px solid var(--line);
+          font-size: 14px;
           width: 100%;
-          border: 1.5px solid var(--line);
-          border-radius: 10px;
-          padding: 11px 12px;
-          font-size: 14.5px;
-          background: var(--cream);
-          color: var(--ink);
-        }
-        .status {
-          border-radius: 10px;
-          padding: 10px 14px;
-          font-size: 13.5px;
-          margin-bottom: 16px;
-        }
-        .status.available {
-          background: #eaf3ec;
-          color: #2f6b40;
-        }
-        .status.limited {
-          background: #fbeee3;
-          color: var(--terracotta);
-        }
-        .status.sold_out,
-        .status.closed {
-          background: #fdecea;
-          color: #a34;
+          max-width: 220px;
         }
         .slots {
           display: flex;
@@ -447,15 +421,15 @@ function PickupStep({
           gap: 8px;
         }
         .slot {
-          border: 1.5px solid var(--line);
-          background: var(--cream);
+          padding: 10px 14px;
           border-radius: 10px;
-          padding: 9px 13px;
-          font-size: 13.5px;
+          border: 1.5px solid var(--line);
+          background: var(--surface);
+          font-size: 13px;
         }
-        .slot.selected {
-          background: var(--pine);
+        .slot.active {
           border-color: var(--pine);
+          background: var(--pine);
           color: #fff;
         }
         .muted {
@@ -465,6 +439,18 @@ function PickupStep({
         .error {
           color: #a34;
           font-size: 13.5px;
+        }
+        .availability {
+          margin-top: 4px;
+          padding: 12px 14px;
+          border-radius: 10px;
+          background: #eef6ee;
+          color: #2a6b3a;
+          font-size: 13.5px;
+        }
+        .availability.warn {
+          background: #fdecea;
+          color: #a34;
         }
       `}</style>
     </div>
@@ -476,19 +462,17 @@ function DetailsStep({ customer, setCustomer, notes, setNotes }) {
     <div className="card">
       <h2>Your details</h2>
       <div className="field">
-        <label>Full name</label>
+        <label>Name</label>
         <input
           type="text"
-          placeholder="Juan Dela Cruz"
           value={customer.name}
           onChange={(e) => setCustomer({ ...customer, name: e.target.value })}
         />
       </div>
       <div className="field">
-        <label>Mobile number</label>
+        <label>Phone</label>
         <input
           type="tel"
-          placeholder="09XX XXX XXXX"
           value={customer.phone}
           onChange={(e) => setCustomer({ ...customer, phone: e.target.value })}
         />
@@ -497,14 +481,13 @@ function DetailsStep({ customer, setCustomer, notes, setNotes }) {
         <label>Email (optional)</label>
         <input
           type="email"
-          placeholder="juan@example.com"
           value={customer.email}
           onChange={(e) => setCustomer({ ...customer, email: e.target.value })}
         />
       </div>
-      <div className="field" style={{ marginBottom: 0 }}>
-        <label>Order notes (optional)</label>
-        <textarea rows={3} value={notes} onChange={(e) => setNotes(e.target.value)} placeholder="Anything we should know?" />
+      <div className="field">
+        <label>Notes (optional)</label>
+        <textarea value={notes} onChange={(e) => setNotes(e.target.value)} rows={3} />
       </div>
 
       <style jsx>{`
@@ -519,23 +502,21 @@ function DetailsStep({ customer, setCustomer, notes, setNotes }) {
           margin-bottom: 14px;
         }
         .field {
-          margin-bottom: 14px;
+          margin-bottom: 16px;
         }
-        label {
+        .field label {
           display: block;
           font-size: 13px;
           font-weight: 600;
-          margin-bottom: 6px;
+          margin-bottom: 8px;
         }
         input,
         textarea {
           width: 100%;
-          border: 1.5px solid var(--line);
+          padding: 11px 14px;
           border-radius: 10px;
-          padding: 11px 12px;
-          font-size: 14.5px;
-          background: var(--cream);
-          color: var(--ink);
+          border: 1px solid var(--line);
+          font-size: 14px;
         }
       `}</style>
     </div>
@@ -547,11 +528,10 @@ function PaymentStep({ onFileChange, uploading, uploadError, paymentScreenshotUr
     <div className="card">
       <h2>Payment</h2>
       <div className="gcash">
-        <div className="icon">GC</div>
+        <div className="icon">GCash</div>
         <div className="details">
-          <b>0917 123 4567</b>
-          <br />
-          Bibingka ni Ate — send the exact amount, then upload your receipt below.
+          Send payment to <b>0917 000 0000</b><br />
+          Account name: Bibingka ni Ate
         </div>
       </div>
 

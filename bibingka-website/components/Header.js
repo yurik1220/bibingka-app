@@ -4,8 +4,8 @@ export default function Header({ totalPieces }) {
       <div className="brand">
         <div className="mark">B</div>
         <div className="text">
-          <div className="name">Bibingka ni Ate</div>
-          <div className="tag">Christmas pre-orders</div>
+          <div className="name">Bingka</div>
+          <div className="tag">Ordering Website</div>
         </div>
       </div>
       <div className="count">{totalPieces} pc{totalPieces === 1 ? '' : 's'}</div>
