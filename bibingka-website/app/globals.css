@@ -1,0 +1,50 @@
+:root {
+  --pine: #1b3a2c;
+  --pine-light: #2a5240;
+  --cream: #faf3e7;
+  --surface: #ffffff;
+  --terracotta: #c1602c;
+  --gold: #d8a34e;
+  --ink: #241c15;
+  --ink-soft: #6b6055;
+  --line: #e8ddc9;
+}
+
+* {
+  box-sizing: border-box;
+}
+
+html,
+body {
+  padding: 0;
+  margin: 0;
+  background: var(--cream);
+  color: var(--ink);
+}
+
+body {
+  font-family: var(--font-work-sans), sans-serif;
+  -webkit-font-smoothing: antialiased;
+}
+
+h1,
+h2,
+h3 {
+  font-family: var(--font-fraunces), serif;
+  margin: 0;
+  font-weight: 600;
+}
+
+button {
+  font-family: inherit;
+  cursor: pointer;
+}
+
+input,
+textarea {
+  font-family: inherit;
+}
+
+a {
+  color: inherit;
+}
